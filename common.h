@@ -13,3 +13,9 @@ struct MessageHeader {
 	char username[32];
 	char msg[BUFSIZE];
 };
+
+struct UserStruct{
+	char user[20];
+	char pass[20];
+	int in_use;
+};

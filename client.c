@@ -8,8 +8,7 @@
 #include <sys/socket.h>
 #include "common.h"
 		
-void send_message(int i, int sockfd, int color_choice)
-{
+void send_message(int i, int sockfd, int color_choice, char user[20]){
 	struct MessageHeader sender, reciever;
 	int length;
 
@@ -24,9 +23,9 @@ void send_message(int i, int sockfd, int color_choice)
 		length = recv(sockfd, reciever.msg, BUFSIZE, 0); //saves the length of the message
 		reciever.msg[length] = '\0'; //trims it nicely
 		switch(color_choice){
-			case 1: printf(ANSI_COLOR_YELLOW "%s", reciever.msg);break;
-			case 2: printf(ANSI_COLOR_MAGENTA "%s", reciever.msg);break;
-			case 3: printf(ANSI_COLOR_CYAN "%s", reciever.msg);break;
+			case 1: printf(ANSI_COLOR_YELLOW "%s:%s",user, reciever.msg);break;
+			case 2: printf(ANSI_COLOR_MAGENTA "%s:%s",user, reciever.msg);break;
+			case 3: printf(ANSI_COLOR_CYAN "%s:%s",user, reciever.msg);break;
 			default: printf("aiurea\n");exit(0);
 		}
 		fflush(stdout);
@@ -34,8 +33,7 @@ void send_message(int i, int sockfd, int color_choice)
 }
 		
 		
-void connect_request(int *sockfd, struct sockaddr_in *server_addr)
-{
+void connect_request(int *sockfd, struct sockaddr_in *server_addr){
 	if ((*sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		perror("Socket not valid");
 		exit(1);
@@ -50,14 +48,49 @@ void connect_request(int *sockfd, struct sockaddr_in *server_addr)
 		exit(1);
 	}
 }
+
+void login(struct UserStruct basic[4],struct UserStruct connected[4],char user[20], char pass[20]){
+	int flag = 0;
 	
-int main()
-{
+	for (int i = 0; i < 4; ++i){
+		for (int j = 0; j < 4; ++j){
+			if( (strcmp(basic[i].user, user) == 0) && (strcmp(basic[i].pass, pass) == 0) && 
+				(strcmp(user, connected[j].user) != 0) && (strcmp(pass, connected[j].pass) != 0)){
+					printf("Permission granted!\n");
+					flag = 1;
+					strcpy(connected[j].user,user);
+					strcpy(connected[j].pass,pass);
+			}
+		}
+	}	
+	if(flag == 0){
+		printf("Invalid user or password!\n");
+		exit(0);
+	}
+
+}
+	
+int main(){
 	int sockfd, fdmax, i, color_choice;
 	struct sockaddr_in server_addr;
 	fd_set master;
 	fd_set read_fds;
-	printf("\nloc de ales culoarea:\n");
+	struct UserStruct basic[4];
+	struct UserStruct connected[4];
+
+	char user[20], pass[20];
+	printf("Enter your username:");scanf("%s",user);
+	printf("Enter your password:");scanf("%s",pass);
+
+	//programming at its finest!
+	strcpy(basic[0].user,"bogdan");		strcpy(basic[0].pass,"pocol");	//basic[0].in_use = 0;
+	strcpy(basic[1].user,"alexandru");	strcpy(basic[1].pass,"rat");	//basic[1].in_use = 0;
+	strcpy(basic[2].user,"elena");		strcpy(basic[2].pass,"ghitan");	//basic[2].in_use = 0;
+	strcpy(basic[3].user,"georgiana");	strcpy(basic[3].pass,"filip");	//basic[3].in_use = 0;
+
+	login(basic,connected,user,pass);
+
+	printf("\nPick the text color:\n");
 	printf("1.yellow\n2.magenta\n3.cyan\n");
 	scanf("%d",&color_choice);
 	connect_request(&sockfd, &server_addr);
@@ -77,7 +110,7 @@ int main()
 		
 		for(i=0; i <= fdmax; i++ )
 			if(FD_ISSET(i, &read_fds))
-				send_message(i, sockfd, color_choice);
+				send_message(i, sockfd, color_choice,user);
 	}
 	printf("Client-quited\n");
 	close(sockfd);
