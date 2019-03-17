@@ -1,31 +1,35 @@
 #include <stdio.h>
+#include <ncurses.h>
 #include <string.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-	
-#define BUFSIZE 1024 //reasonable message length
-#define PORT 6969
+#include "common.h"
 		
-void send_message(int i, int sockfd)
+void send_message(int i, int sockfd, int color_choice)
 {
-	char send_buf[BUFSIZE];
-	char recv_buf[BUFSIZE];
+	struct MessageHeader send_buf, recv_buf;
 	int nbyte_recvd;
-	
-	if (i == 0){
-		fgets(send_buf, BUFSIZE, stdin);
-		if (strcmp(send_buf , "quit\n") == 0) { //FANCY way to CTRL+C
+
+	if (i == 0){ //reading state
+		fgets(send_buf.msg, BUFSIZE, stdin);
+		if (strcmp(send_buf.msg , "quit\n") == 0) { //FANCY way to CTRL+C
 			exit(0);
 		}else
-			send(sockfd, send_buf, strlen(send_buf), 0);
-	}else {
-		nbyte_recvd = recv(sockfd, recv_buf, BUFSIZE, 0); //saves the length of the message
-		//printf("sockfd: %d\n",sockfd);
-		recv_buf[nbyte_recvd] = '\0'; //trims it nicely
-		printf("The client number %d says: %s\n" ,sockfd, recv_buf);
+			//send(sockfd, send_buf.id,)
+			send(sockfd, send_buf.msg, strlen(send_buf.msg), 0);
+	}else { //writing state
+		nbyte_recvd = recv(sockfd, recv_buf.msg, BUFSIZE, 0); //saves the length of the message
+		recv_buf.msg[nbyte_recvd] = '\0'; //trims it nicely
+		switch(color_choice){
+			case 1: printf(ANSI_COLOR_YELLOW "%s\n", recv_buf.msg);break;
+			case 2: printf(ANSI_COLOR_MAGENTA "%s\n", recv_buf.msg);break;
+			case 3: printf(ANSI_COLOR_CYAN "%s\n", recv_buf.msg);break;
+			default: printf("aiurea\n");exit(0);
+		}
+		printf(ANSI_COLOR_CYAN "%s\n", recv_buf.msg);
 		fflush(stdout);
 	}
 }
@@ -50,11 +54,13 @@ void connect_request(int *sockfd, struct sockaddr_in *server_addr)
 	
 int main()
 {
-	int sockfd, fdmax, i;
+	int sockfd, fdmax, i, color_choice;
 	struct sockaddr_in server_addr;
 	fd_set master;
 	fd_set read_fds;
-	//printf("Type your message:");
+	printf("\nloc de ales culoarea:\n");
+	printf("1.yellow\n2.magenta\n3.cyan\n");
+	scanf("%d",&color_choice);
 	connect_request(&sockfd, &server_addr);
 	FD_ZERO(&master);
     FD_ZERO(&read_fds);
@@ -65,6 +71,8 @@ int main()
 	while(1){
 
 		read_fds = master;
+		//printf(ANSI_COLOR_YELLOW "type here: "ANSI_COLOR_RESET);
+		//fflush(stdout);
 		if(select(fdmax+1, &read_fds, NULL, NULL, NULL) == -1){
 			perror("Nothing to SELECT bro");
 			exit(4);
@@ -72,7 +80,7 @@ int main()
 		
 		for(i=0; i <= fdmax; i++ )
 			if(FD_ISSET(i, &read_fds))
-				send_message(i, sockfd);
+				send_message(i, sockfd, color_choice);
 	}
 	printf("Client-quited\n");
 	close(sockfd);

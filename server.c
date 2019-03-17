@@ -16,20 +16,19 @@ Initializes the file descriptor set fdset to have zero bits for all file descrip
 */
 
 #include <stdio.h>
+#include <ncurses.h>
 #include <stdlib.h>
 #include <string.h> 
 #include <unistd.h> 
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h> 
-	
-#define PORT 6969 //NOT hardcoded port number
-#define BUFSIZE 1024 //reasonable message length
+#include "common.h"	
 
-void send_to_all(int j, int i, int sockfd, int nbytes_recvd, char *recv_buf, fd_set *master) {
+void send_to_all(int j, int i, int sockfd, int nbytes_recvd, struct MessageHeader recv_buf, fd_set *master) {
 	if (FD_ISSET(j, master)){
 		if (j != sockfd && j != i) {
-			if (send(j, recv_buf, nbytes_recvd, 0) == -1) {
+			if (send(j, recv_buf.msg, nbytes_recvd, 0) == -1) {
 				perror("Didn't send anything");
 			}
 		}
@@ -38,9 +37,10 @@ void send_to_all(int j, int i, int sockfd, int nbytes_recvd, char *recv_buf, fd_
 		
 void send_message(int i, fd_set *master, int sockfd, int fdmax) {
 	int nbytes_recvd, j;
-	char recv_buf[BUFSIZE];
+	//char recv_buf[BUFSIZE];
+	struct MessageHeader recv_buf;
 	
-	if ((nbytes_recvd = recv(i, recv_buf, BUFSIZE, 0)) <= 0) {
+	if ((nbytes_recvd = recv(i, recv_buf.msg, BUFSIZE, 0)) <= 0) {
 		if (nbytes_recvd == 0) {
 			printf("socket %d hung up\n", i);
 		}else {
@@ -96,6 +96,14 @@ void connect_request(int *sockfd, struct sockaddr_in *my_addr) {
 		perror("Deaf...");
 		exit(1);
 	}
+
+	printf(ANSI_COLOR_RED     "This text is RED!"     ANSI_COLOR_RESET "\n");
+    printf(ANSI_COLOR_GREEN   "This text is GREEN!"   ANSI_COLOR_RESET "\n");
+  	printf(ANSI_COLOR_YELLOW  "This text is YELLOW!"  ANSI_COLOR_RESET "\n");
+  	printf(ANSI_COLOR_BLUE    "This text is BLUE!"    ANSI_COLOR_RESET "\n");
+  	printf(ANSI_COLOR_MAGENTA "This text is MAGENTA!" ANSI_COLOR_RESET "\n");
+  	printf(ANSI_COLOR_CYAN    "This text is CYAN!"    ANSI_COLOR_RESET "\n");
+
 	printf("\nTCPServer Waiting for client on port %d\n", PORT);
 	fflush(stdout);
 }
@@ -120,9 +128,9 @@ int main() {
 			exit(4);
 		}
 		
-		for (i = 0; i <= fdmax; i++){
+		for (i = 0; i <= fdmax; i++){ //iterate through the set of fds
 			if (FD_ISSET(i, &read_fds)){
-				if (i == sockfd)
+				if (i == sockfd) //if the current one is the one with the connection accept otherwise send message
 					connection_accept(&master, &fdmax, sockfd, &client_addr);
 				else
 					send_message(i, &master, sockfd, fdmax);
