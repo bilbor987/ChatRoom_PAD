@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <ncurses.h>
+//#include <ncurses.h>
 #include <string.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
@@ -23,9 +23,9 @@ void send_message(int i, int sockfd, int color_choice, char user[20]){
 		length = recv(sockfd, reciever.msg, BUFSIZE, 0); //saves the length of the message
 		reciever.msg[length] = '\0'; //trims it nicely
 		switch(color_choice){
-			case 1: printf(ANSI_COLOR_YELLOW "%s:%s",user, reciever.msg);break;
-			case 2: printf(ANSI_COLOR_MAGENTA "%s:%s",user, reciever.msg);break;
-			case 3: printf(ANSI_COLOR_CYAN "%s:%s",user, reciever.msg);break;
+			case 1: printf(ANSI_COLOR_YELLOW "%s:%s","other user", reciever.msg);break;
+			case 2: printf(ANSI_COLOR_MAGENTA "%s:%s","other user", reciever.msg);break;
+			case 3: printf(ANSI_COLOR_CYAN "%s:%s","other user", reciever.msg);break;
 			default: printf("aiurea\n");exit(0);
 		}
 		fflush(stdout);
@@ -33,13 +33,14 @@ void send_message(int i, int sockfd, int color_choice, char user[20]){
 }
 		
 		
-void connect_request(int *sockfd, struct sockaddr_in *server_addr){
+void connect_request(int portno,int *sockfd, struct sockaddr_in *server_addr){
+		
 	if ((*sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		perror("Socket not valid");
 		exit(1);
 	}
 	server_addr->sin_family = AF_INET;
-	server_addr->sin_port = htons(PORT);
+	server_addr->sin_port = htons(portno);
 	server_addr->sin_addr.s_addr = inet_addr("127.0.0.1");
 	memset(server_addr->sin_zero, '\0', sizeof(server_addr->sin_zero));
 	
@@ -56,7 +57,7 @@ void login(struct UserStruct basic[4],struct UserStruct connected[4],char user[2
 		for (int j = 0; j < 4; ++j){
 			if( (strcmp(basic[i].user, user) == 0) && (strcmp(basic[i].pass, pass) == 0) && 
 				(strcmp(user, connected[j].user) != 0) && (strcmp(pass, connected[j].pass) != 0)){
-					printf("Permission granted!\n");
+						//printf("Permission granted!\n");
 					flag = 1;
 					strcpy(connected[j].user,user);
 					strcpy(connected[j].pass,pass);
@@ -70,7 +71,7 @@ void login(struct UserStruct basic[4],struct UserStruct connected[4],char user[2
 
 }
 	
-int main(){
+int main(int argc, char *argv[]){
 	int sockfd, fdmax, i, color_choice;
 	struct sockaddr_in server_addr;
 	fd_set master;
@@ -93,7 +94,7 @@ int main(){
 	printf("\nPick the text color:\n");
 	printf("1.yellow\n2.magenta\n3.cyan\n");
 	scanf("%d",&color_choice);
-	connect_request(&sockfd, &server_addr);
+	connect_request(atoi(argv[1]),&sockfd, &server_addr);
 	FD_ZERO(&master);
     FD_ZERO(&read_fds);
     FD_SET(0, &master);
