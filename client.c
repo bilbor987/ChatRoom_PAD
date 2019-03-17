@@ -29,7 +29,6 @@ void send_message(int i, int sockfd, int color_choice)
 			case 3: printf(ANSI_COLOR_CYAN "%s\n", recv_buf.msg);break;
 			default: printf("aiurea\n");exit(0);
 		}
-		printf(ANSI_COLOR_CYAN "%s\n", recv_buf.msg);
 		fflush(stdout);
 	}
 }
