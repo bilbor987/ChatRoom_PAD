@@ -14,9 +14,8 @@ FD_ZERO(&fdset)
 Initializes the file descriptor set fdset to have zero bits for all file descriptors.
 
 */
-
 #include <stdio.h>
-#include <ncurses.h>
+//#include <ncurses.h>
 #include <stdlib.h>
 #include <string.h> 
 #include <unistd.h> 
@@ -71,7 +70,7 @@ void connection_accept(fd_set *master, int *fdmax, int sockfd, struct sockaddr_i
 	}
 }
 	
-void connect_request(int *sockfd, struct sockaddr_in *my_addr) {
+void connect_request(int portno,int *sockfd, struct sockaddr_in *my_addr) {
 	int yes = 1;
 		
 	if ((*sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -79,7 +78,7 @@ void connect_request(int *sockfd, struct sockaddr_in *my_addr) {
 	}
 		
 	my_addr->sin_family = AF_INET;
-	my_addr->sin_port = htons(PORT);
+	my_addr->sin_port = htons(portno);
 	my_addr->sin_addr.s_addr = INADDR_ANY;
 	memset(my_addr->sin_zero, '\0', sizeof my_addr->sin_zero);
 		
@@ -97,11 +96,14 @@ void connect_request(int *sockfd, struct sockaddr_in *my_addr) {
 		exit(1);
 	}
 
-	printf("\nTCPServer Waiting for client on port %d\n", PORT);
+	printf("\nTCPServer Waiting for client on port %d\n", portno);
 	fflush(stdout);
 }
 
-int main() {
+
+
+
+int main(int argc, char *argv[]) {
 	fd_set master; 
 	fd_set read_fds;
 	int fdmax, i, sockfd = 0;
@@ -110,7 +112,7 @@ int main() {
 	
 	FD_ZERO(&master); //initializing the socket sets
 	FD_ZERO(&read_fds);
-	connect_request(&sockfd, &my_addr);
+	connect_request(atoi(argv[1]),&sockfd, &my_addr);
 	FD_SET(sockfd, &master); //after esablishing connection, sets the sockfd accordingly in the master set
 	
 	fdmax = sockfd;
