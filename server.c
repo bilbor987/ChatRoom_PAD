@@ -25,10 +25,10 @@ Initializes the file descriptor set fdset to have zero bits for all file descrip
 #include <sys/socket.h> 
 #include "common.h"	
 
-void send_to_all(int j, int i, int sockfd, int nbytes_recvd, struct MessageHeader recv_buf, fd_set *master) {
+void send_to_all(int j, int i, int sockfd, int length, struct MessageHeader recv_buf, fd_set *master) {
 	if (FD_ISSET(j, master)){
 		if (j != sockfd && j != i) {
-			if (send(j, recv_buf.msg, nbytes_recvd, 0) == -1) {
+			if (send(j, recv_buf.msg, length, 0) == -1) {
 				perror("Didn't send anything");
 			}
 		}
@@ -36,12 +36,12 @@ void send_to_all(int j, int i, int sockfd, int nbytes_recvd, struct MessageHeade
 }
 		
 void send_message(int i, fd_set *master, int sockfd, int fdmax) {
-	int nbytes_recvd, j;
+	int length, j;
 	//char recv_buf[BUFSIZE];
 	struct MessageHeader recv_buf;
 	
-	if ((nbytes_recvd = recv(i, recv_buf.msg, BUFSIZE, 0)) <= 0) {
-		if (nbytes_recvd == 0) {
+	if ((length = recv(i, recv_buf.msg, BUFSIZE, 0)) <= 0) {
+		if (length == 0) {
 			printf("socket %d hung up\n", i);
 		}else {
 			perror("Recv error");
@@ -50,7 +50,7 @@ void send_message(int i, fd_set *master, int sockfd, int fdmax) {
 		FD_CLR(i, master); //clears the associated bit for the "i" descriptor in the "master" fd_set
 	}else { 
 		for(j = 0; j <= fdmax; j++){
-			send_to_all(j, i, sockfd, nbytes_recvd, recv_buf, master );
+			send_to_all(j, i, sockfd, length, recv_buf, master );
 		}
 	}	
 }
@@ -96,13 +96,6 @@ void connect_request(int *sockfd, struct sockaddr_in *my_addr) {
 		perror("Deaf...");
 		exit(1);
 	}
-
-	printf(ANSI_COLOR_RED     "This text is RED!"     ANSI_COLOR_RESET "\n");
-    printf(ANSI_COLOR_GREEN   "This text is GREEN!"   ANSI_COLOR_RESET "\n");
-  	printf(ANSI_COLOR_YELLOW  "This text is YELLOW!"  ANSI_COLOR_RESET "\n");
-  	printf(ANSI_COLOR_BLUE    "This text is BLUE!"    ANSI_COLOR_RESET "\n");
-  	printf(ANSI_COLOR_MAGENTA "This text is MAGENTA!" ANSI_COLOR_RESET "\n");
-  	printf(ANSI_COLOR_CYAN    "This text is CYAN!"    ANSI_COLOR_RESET "\n");
 
 	printf("\nTCPServer Waiting for client on port %d\n", PORT);
 	fflush(stdout);

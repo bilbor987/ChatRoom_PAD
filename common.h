@@ -9,7 +9,7 @@
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
 struct MessageHeader {
-	int id;
+	int color;
 	char username[32];
 	char msg[BUFSIZE];
 };

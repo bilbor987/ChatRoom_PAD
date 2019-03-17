@@ -10,23 +10,23 @@
 		
 void send_message(int i, int sockfd, int color_choice)
 {
-	struct MessageHeader send_buf, recv_buf;
-	int nbyte_recvd;
+	struct MessageHeader sender, reciever;
+	int length;
 
 	if (i == 0){ //reading state
-		fgets(send_buf.msg, BUFSIZE, stdin);
-		if (strcmp(send_buf.msg , "quit\n") == 0) { //FANCY way to CTRL+C
+		fgets(sender.msg, BUFSIZE, stdin);
+		if (strcmp(sender.msg , "quit\n") == 0) { //FANCY way to CTRL+C
 			exit(0);
 		}else
-			//send(sockfd, send_buf.id,)
-			send(sockfd, send_buf.msg, strlen(send_buf.msg), 0);
+			//send(sockfd, sender.msg, strlen(sender.msg), 0);
+			send(sockfd, sender.msg, strlen(sender.msg), 0);
 	}else { //writing state
-		nbyte_recvd = recv(sockfd, recv_buf.msg, BUFSIZE, 0); //saves the length of the message
-		recv_buf.msg[nbyte_recvd] = '\0'; //trims it nicely
+		length = recv(sockfd, reciever.msg, BUFSIZE, 0); //saves the length of the message
+		reciever.msg[length] = '\0'; //trims it nicely
 		switch(color_choice){
-			case 1: printf(ANSI_COLOR_YELLOW "%s\n", recv_buf.msg);break;
-			case 2: printf(ANSI_COLOR_MAGENTA "%s\n", recv_buf.msg);break;
-			case 3: printf(ANSI_COLOR_CYAN "%s\n", recv_buf.msg);break;
+			case 1: printf(ANSI_COLOR_YELLOW "%s", reciever.msg);break;
+			case 2: printf(ANSI_COLOR_MAGENTA "%s", reciever.msg);break;
+			case 3: printf(ANSI_COLOR_CYAN "%s", reciever.msg);break;
 			default: printf("aiurea\n");exit(0);
 		}
 		fflush(stdout);
@@ -70,8 +70,6 @@ int main()
 	while(1){
 
 		read_fds = master;
-		//printf(ANSI_COLOR_YELLOW "type here: "ANSI_COLOR_RESET);
-		//fflush(stdout);
 		if(select(fdmax+1, &read_fds, NULL, NULL, NULL) == -1){
 			perror("Nothing to SELECT bro");
 			exit(4);
