@@ -110,6 +110,13 @@ int main(int argc, char *argv[]) {
 	struct sockaddr_in my_addr;
 	struct sockaddr_in client_addr;
 	
+	if(argc!=2)
+	{
+		printf("Usage: ./file port number\n");
+		exit(1);
+	
+	}
+	
 	FD_ZERO(&master); //initializing the socket sets
 	FD_ZERO(&read_fds);
 	connect_request(atoi(argv[1]),&sockfd, &my_addr);
