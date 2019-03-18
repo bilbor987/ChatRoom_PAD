@@ -78,6 +78,13 @@ int main(int argc, char *argv[]){
 	fd_set read_fds;
 	struct UserStruct basic[4];
 	struct UserStruct connected[4];
+	
+	if(argc!=2)
+	{
+		printf("Usage: ./file port number\n");
+		exit(1);
+	
+	}
 
 	char user[20], pass[20];
 	printf("Enter your username:");scanf("%s",user);
